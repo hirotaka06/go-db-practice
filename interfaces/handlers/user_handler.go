@@ -1,74 +1,75 @@
-package models
+package handlers
 
 import (
 	"net/http"
 	"strconv"
+	"testDB/entities"
+	"testDB/usecases"
 
 	"github.com/labstack/echo/v4"
 )
 
-// ユーザーを取得する
-func (s *Server) GetUsers(c echo.Context) error {
-	users, err := s.SelectUsers()
+type UserHandler struct {
+	Usecase *usecases.UserUsecase
+}
+
+func (h *UserHandler) GetUsers(c echo.Context) error {
+	users, err := h.Usecase.GetUsers()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, users)
 }
 
-// 特定のユーザーを取得する
-func (s *Server) GetUser(c echo.Context) error {
+func (h *UserHandler) GetUser(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid user ID")
 	}
 
-	user, err := s.SelectUserByID(id)
+	user, err := h.Usecase.GetUser(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, user)
 }
 
-// ユーザーを作成する
-func (s *Server) CreateUser(c echo.Context) error {
-	var user User
+func (h *UserHandler) CreateUser(c echo.Context) error {
+	var user entities.User
 	if err := c.Bind(&user); err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid request payload")
 	}
 
-	if err := s.InsertUsers([]User{user}); err != nil {
+	if err := h.Usecase.CreateUser(user); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusCreated, user)
 }
 
-// ユーザーを更新する
-func (s *Server) UpdateUserHandler(c echo.Context) error {
+func (h *UserHandler) UpdateUser(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid user ID")
 	}
 
-	var user User
+	var user entities.User
 	if err := c.Bind(&user); err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid request payload")
 	}
 
-	if err := s.UpdateUser(id, user.Name); err != nil {
+	if err := h.Usecase.UpdateUser(id, user.Name); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
 }
 
-// ユーザーを削除する
-func (s *Server) DeleteUserHandler(c echo.Context) error {
+func (h *UserHandler) DeleteUser(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid user ID")
 	}
 
-	if err := s.DeleteUser(id); err != nil {
+	if err := h.Usecase.DeleteUser(id); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)

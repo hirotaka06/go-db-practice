@@ -1,4 +1,4 @@
-package models
+package infrastructure
 
 import (
 	"database/sql"
@@ -8,11 +8,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
-
-// DBに接続するための構造体
-type Server struct {
-	DB *sql.DB
-}
 
 func DBConnect() (*sql.DB, error) {
 	var err error
