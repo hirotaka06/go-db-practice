@@ -11,40 +11,44 @@ type UserRepository struct {
 }
 
 func (r *UserRepository) GetAll() ([]entities.User, error) {
-	var users []entities.User
-	rows, err := r.DB.Query("SELECT * FROM users")
+	query     := "SELECT * FROM users"
+	rows, err := r.DB.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("query error: %v", err)
 	}
 	defer rows.Close()
 
+	var users []entities.User
 	for rows.Next() {
 		var user entities.User
-		if err := rows.Scan(&user.ID, &user.Name, &user.Age); err != nil {
-			return nil, fmt.Errorf("scan user error: %v", err)
+		scanErr := rows.Scan(&user.ID, &user.Name, &user.Age)
+		if scanErr != nil {
+			return nil, fmt.Errorf("scan user error: %v", scanErr)
 		}
 		users = append(users, user)
 	}
-
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("scan users error: %v", err)
 	}
-
 	return users, nil
 }
 
 func (r *UserRepository) GetByID(id int) (entities.User, error) {
+	query := "SELECT * FROM users WHERE id = ?"
+	row   := r.DB.QueryRow(query, id)
+
 	var user entities.User
-	row := r.DB.QueryRow("SELECT * FROM users WHERE id = ?", id)
 	err := row.Scan(&user.ID, &user.Name, &user.Age)
 	if err != nil {
 		return entities.User{}, fmt.Errorf("scan user error: %v", err)
 	}
+
 	return user, nil
 }
 
 func (r *UserRepository) Create(user entities.User) error {
-	_, err := r.DB.Exec("INSERT INTO users (name, age) VALUES (?, ?)", user.Name, user.Age)
+	query  := "INSERT INTO users (name, age) VALUES (?, ?)"
+	_, err := r.DB.Exec(query, user.Name, user.Age)
 	if err != nil {
 		return fmt.Errorf("insert user error: %v", err)
 	}
@@ -52,7 +56,8 @@ func (r *UserRepository) Create(user entities.User) error {
 }
 
 func (r *UserRepository) Update(id int, name string) error {
-	_, err := r.DB.Exec("UPDATE users SET name = ? WHERE id = ?", name, id)
+	query  := "UPDATE users SET name = ? WHERE id = ?"
+	_, err := r.DB.Exec(query, name, id)
 	if err != nil {
 		return fmt.Errorf("update user error: %v", err)
 	}
@@ -60,7 +65,8 @@ func (r *UserRepository) Update(id int, name string) error {
 }
 
 func (r *UserRepository) Delete(id int) error {
-	_, err := r.DB.Exec("DELETE FROM users WHERE id = ?", id)
+	query  := "DELETE FROM users WHERE id = ?"
+	_, err := r.DB.Exec(query, id)
 	if err != nil {
 		return fmt.Errorf("delete user error: %v", err)
 	}

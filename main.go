@@ -19,7 +19,7 @@ func main() {
 	defer db.Close()
 
 	// リポジトリ、ユースケース、ハンドラを初期化する
-	userRepo := &repositories.UserRepository{DB: db}
+	userRepo    := &repositories.UserRepository{DB: db}
 	userUsecase := &usecases.UserUsecase{Repo: userRepo}
 	userHandler := &handlers.UserHandler{Usecase: userUsecase}
 
